@@ -1,13 +1,11 @@
 rm(list = ls())
-#https://www.math.pku.edu.cn/teachers/lidf/docs/Rbook/html/_Rbook/stat-learn-lasso.html#statl-hitters-ridge-cv
 getwd()
 setwd('/Volumes/T7/CKM')
 
-data<-read.csv('train20250224.csv')
+data<-read.csv('train.csv')
 colnames(data)
 data<-data[,-c(1,17,68,69)]
 
-#共线性诊断######
 library(car)
 VIF<-data.frame(vif(glm(mortstat~.,data=data,
         family = binomial(link = "logit"))))
@@ -66,63 +64,6 @@ summary(glm)
 stepAIC<-data.frame(glm$coefficients)
 stepAIC<-rownames(stepAIC)[2:nrow(stepAIC)]
 
-#reg subsets####
-library(leaps)
-regfit.full <- regsubsets(
-  mortstat ~ ., data, nvmax=18)
-reg.summary <- summary(regfit.full)
-reg.summary
-plot(reg.summary$bic)
-coef(regfit.full, id=7)
-
-#ridge regression#####
-set.seed(1)
-colnames(data)
-x <- model.matrix(mortstat ~ ., data)[,-1]
-y<-data$mortstat
-grid <- 10^seq(10, -2, length=100)
-ridge.mod <- glmnet(x, y, alpha=0, lambda=grid)
-dim(coef(ridge.mod))
-set.seed(1)
-cv.out <- cv.glmnet(x, y, alpha=0)
-plot(cv.out)
-bestlam <- cv.out$lambda.min
-ridge.pred <- predict(
-  ridge.mod, s = bestlam, 
-  newx =x)
-mean( (ridge.pred - y)^2 ) |> sqrt()#0.3310555
-ridge_coef <- coef(cv.out, s = "lambda.min")
-ridge <- rownames(ridge_coef)[ridge_coef[, 1] != 0]
-ridge <- lasso[2:length(ridge)]
-
-#LASSO#####
-library(glmnet)
-set.seed(1)
-colnames(data)
-x <- model.matrix(mortstat ~ ., data)[,-1]
-y<-data$mortstat
-grid <- 10^seq(10, -2, length=100)
-lasso.mod <- glmnet(x, y, alpha=1, lambda=grid)
-plot(lasso.mod)
-cv.out <- cv.glmnet(x, y, alpha=1)
-plot(cv.out)
-bestlam <- cv.out$lambda.min; bestlam#0.0005334123
-lasso.pred <- predict(
-  lasso.mod, s = bestlam, 
-  newx = x)
-mean( (lasso.pred - y)^2 ) |> sqrt()#0.3303204
-lasso_coef <- coef(cv.out, s = "lambda.min")
-lasso <- rownames(lasso_coef)[lasso_coef[, 1] != 0]
-lasso <- lasso[2:length(lasso)]
-
-#adaptive lasso#####
-library(msqps)
-cv.out <- adaptive_lasso(y,x,alpha=1)
-plot(cv.out)
-bestlam <- cv.out$lambda.min
-adape_lasso <- adaptive_lasso(y,x,alpha=1,lambda=max.iteration=100)
-adape_lasso_variable<-adape_lasso
-
 #Boruta#####
 library(Boruta)
 set.seed(2)
@@ -131,7 +72,7 @@ x <- data[,-33]
 y<-data$mortstat
 boruta <- Boruta(mortstat~.,data=data, 
                  pValue=0.0001, mcAdj=T, 
-                 maxRuns=100)
+                 maxRuns=1000)
 boruta
 print(boruta)
 boruta$ImpHistory
@@ -178,21 +119,19 @@ Data <- mRMR.data(data = data.frame(mrmr_feature))
 mrmr=mRMR.ensemble(data = Data, target_indices = target_indices, 
                    feature_count = 20, solution_count = 1)
 
-#获取筛选出来的特征的列，包含在mrmr@filters中，mrmr@filters[原特征个数]这个list里
 index=mrmr@filters[[as.character(mrmr@target_indices)]]
-#获取训练集特征
 train_feature <- mrmr_feature[,index]
 print(colnames(train_feature))
 mrmr_feature<-colnames(train_feature)
-#获取相关性评分（Relevance）
+#Relevance
 relevance_scores <- scores(mrmr)
 relevance_scores
-#计算冗余评分（Redundancy）
+#Redundancy
 redundancy_matrix <- mim(mrmr)
 selected_features <- featureNames(mrmr)[index]
 redundancy_scores <- sapply(seq_along(selected_features), function(i) {
   if (i == 1) {
-    0  # 第一个特征无冗余
+    0  
   } else {
     mean(redundancy_matrix[selected_features[i], selected_features[1:(i-1)]])
   }
