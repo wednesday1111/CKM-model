@@ -89,7 +89,7 @@ auc <- read.csv("test_auc.csv")
 test <- read.csv("test20250224.csv")
 full<-cbind(test,auc)
 full$stage <- cut(full$RF_hybrid_Pred, 
-                  breaks = c(-Inf, 0.14,Inf), 
+                  breaks = c(-Inf, 0.5,Inf), 
                   labels = c("Low", "High"), 
                   right=TRUE)
 fit<-survfit(Surv(permth_int,mortstat)~stage,data=full)
@@ -126,7 +126,7 @@ p2 <- ggsurvplot(fit, data = full,
 p2
 
 full$stage <- cut(full$GBM_hybrid_Pred, 
-                  breaks = c(-Inf, 0.25,Inf), 
+                  breaks = c(-Inf, 0.5,Inf), 
                   labels = c("Low", "High"), 
                   right=TRUE)
 fit<-survfit(Surv(permth_int,mortstat)~stage,data=full)
