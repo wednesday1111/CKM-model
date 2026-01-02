@@ -5,7 +5,7 @@ library(forestploter)
 library(readxl)
 library(grid)
 
-df <- read_excel('20250225/AUC.xlsx')
+df <- read_excel('AUC.xlsx')
 df$`AUC (95% CI)` <- ifelse(is.na(df$`AUC (95% CI)`), "", df$`AUC (95% CI)`)
 df$auc <- ifelse(is.na(df$auc), "", df$auc)
 df$lower <- ifelse(is.na(df$lower), "", df$lower)
