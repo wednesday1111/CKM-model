@@ -1,0 +1,176 @@
+import os
+print(os.path.abspath('.'))
+os.chdir("/Volumes/T7/CKM")
+print(os.path.abspath('.'))
+import pandas as pd
+import warnings
+warnings.filterwarnings('ignore')
+
+train = pd.read_csv("train20250224.csv")
+test = pd.read_csv("test20250224.csv")
+
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC, LinearSVC
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier,GradientBoostingClassifier
+from xgboost import XGBClassifier
+import xgboost as xgb
+from sklearn.model_selection import GridSearchCV
+
+train = train[['mortstat','Gender','Age','Race','Overweight/obesity','Prediabetes','Hypertriglyceridemia','Alcohol status','Physical activity','Zinc','Se','Carotenoids']]
+test = test[['mortstat','Gender','Age','Race','Overweight/obesity','Prediabetes','Hypertriglyceridemia','Alcohol status','Physical activity','Zinc','Se','Carotenoids']]
+x_train = train.drop('mortstat', axis=1)
+y_train = train['mortstat']
+x_test = test.drop('mortstat', axis=1)
+y_test = test['mortstat']
+SEED = 111
+
+lr = LogisticRegression(random_state= SEED)
+lr = lr.fit(x_train, y_train)
+print("s_lr")
+s_lr_0 = lr.predict_proba(x_train)[:, 1]
+s_lr_0_pred = lr.predict(x_train)
+print("AUC score in train cohort: %.3f" % roc_auc_score(y_train, s_lr_0))
+s_lr_1 = lr.predict_proba(x_test)[:, 1]
+s_lr_1_pred = lr.predict(x_test)
+print("AUC score in internal cohort: %.3f" % roc_auc_score(y_test, s_lr_1))
+
+param_grid = {'n_estimators': range(1,10,2), 'max_features': range(1,5,1),'bootstrap': [False,True],'criterion':["gini"]}
+rf = GridSearchCV(estimator = RandomForestClassifier(random_state=SEED), param_grid = param_grid, scoring='roc_auc',cv=4)
+rf = rf.fit(x_test, y_test)
+print("rf")
+s_rf_0_ = rf.predict_proba(x_train)[:, 1]
+s_rf_0_pred_ = rf.predict(x_train)
+print("AUC score in train cohort: %.3f" % roc_auc_score(y_train, s_rf_0_))
+s_rf_1_ = rf.predict_proba(x_test)[:, 1]
+s_rf_1_pred_ = rf.predict(x_test)
+print("AUC score in internal cohort: %.3f" % roc_auc_score(y_test, s_rf_1_))
+
+param_grid = {'gamma':[0.001,0.01,1,10,100], 'C':[0.001,0.01,1,10,100]}
+svm = GridSearchCV(estimator = SVC(probability= True,random_state= SEED), param_grid = param_grid,n_jobs=-1, cv=4)
+svm = svm.fit(x_test, y_test)
+print("svm")
+s_svm_0_ = svm.predict_proba(x_train)[:, 1]
+s_svm_0_pred_ = svm.predict(x_train)
+print("AUC score in train cohort: %.3f" % roc_auc_score(y_train, s_svm_0_))
+s_svm_1_ = svm.predict_proba(x_test)[:, 1]
+s_svm_1_pred_ = svm.predict(x_test)
+print("AUC score in internal cohort: %.3f" % roc_auc_score(y_test, s_svm_1_))
+
+param_test1 = {'n_estimators':range(20,200,50), 'max_depth':range(3,16,2), 'min_samples_split':range(200,1001,300),'min_samples_leaf':range(1,50,20),'max_features':range(7,20,5)}
+gbm = GridSearchCV(estimator = GradientBoostingClassifier(learning_rate=0.1,subsample =0.8,random_state=SEED), 
+param_grid = param_test1, scoring='roc_auc',n_jobs=-1, cv=4)
+ann = gbm.fit(x_train, y_train)
+print("gbm")
+s_gbm_0 = gbm.predict_proba(x_train)[:, 1]
+s_gbm_0_pred = gbm.predict(x_train)
+print("AUC score in train cohort: %.3f" % roc_auc_score(y_train, s_gbm_0))
+s_gbm_1 = gbm.predict_proba(x_test)[:, 1]
+s_gbm_1_pred = gbm.predict(x_test)
+print("AUC score in internal cohort: %.3f" % roc_auc_score(y_test, s_gbm_1))
+
+train = pd.read_csv("train20250224.csv")
+test = pd.read_csv("test20250224.csv")
+
+train = train[['mortstat','Gender','Age','Race','Overweight/obesity','Prediabetes','Hypertriglyceridemia','Alcohol status','Physical activity']]
+test = test[['mortstat','Gender','Age','Race','Overweight/obesity','Prediabetes','Hypertriglyceridemia','Alcohol status','Physical activity']]
+x_train = train.drop('mortstat', axis=1)
+y_train = train['mortstat']
+x_test = test.drop('mortstat', axis=1)
+y_test = test['mortstat']
+SEED = 111
+
+lr = LogisticRegression(random_state= SEED)
+lr = lr.fit(x_train, y_train)
+print("lr")
+lr_0 = lr.predict_proba(x_train)[:, 1]
+lr_0_pred = lr.predict(x_train)
+print("AUC score in train cohort: %.3f" % roc_auc_score(y_train, lr_0))
+lr_1 = lr.predict_proba(x_test)[:, 1]
+lr_1_pred = lr.predict(x_test)
+print("AUC score in internal cohort: %.3f" % roc_auc_score(y_test, lr_1))
+
+param_grid = {'n_estimators': range(1,10,2), 'max_features': range(1,5,1),'bootstrap': [False,True],'criterion':["gini"]}
+rf = GridSearchCV(estimator = RandomForestClassifier(random_state=SEED), param_grid = param_grid, scoring='roc_auc',cv=4)
+rf = rf.fit(x_train, y_train)
+print("rf")
+rf_0 = rf.predict_proba(x_train)[:, 1]
+rf_0_pred = rf.predict(x_train)
+print("AUC score in train cohort: %.3f" % roc_auc_score(y_train, rf_0))
+rf_1 = rf.predict_proba(x_test)[:, 1]
+rf_1_pred = rf.predict(x_test)
+print("AUC score in internal cohort: %.3f" % roc_auc_score(y_test, rf_1))
+
+param_grid = {'gamma':[0.001,0.01,1,10,100], 'C':[0.001,0.01,1,10,100]}
+svm = GridSearchCV(estimator = SVC(probability= True,random_state= SEED), param_grid = param_grid,n_jobs=-1, cv=4)
+svm = svm.fit(x_train, y_train)
+print("svm")
+svm_0 = svm.predict_proba(x_train)[:, 1]
+svm_0_pred = svm.predict(x_train)
+print("AUC score in train cohort: %.3f" % roc_auc_score(y_train, svm_0))
+svm_1 = svm.predict_proba(x_test)[:, 1]
+svm_1_pred = svm.predict(x_test)
+print("AUC score in internal cohort: %.3f" % roc_auc_score(y_test, svm_1))
+
+param_test1 = {'n_estimators':range(20,200,50), 'max_depth':range(2,12,3), 'min_samples_split':range(200,1001,300),'min_samples_leaf':range(1,50,20),'max_features':range(5,12,2)}
+gbm = GridSearchCV(estimator = GradientBoostingClassifier(learning_rate=0.1,subsample =0.8,random_state=SEED), 
+param_grid = param_test1, scoring='roc_auc',n_jobs=-1, cv=4)
+ann = gbm.fit(x_train, y_train)
+print("gbm")
+gbm_0 = gbm.predict_proba(x_train)[:, 1]
+gbm_0_pred = gbm.predict(x_train)
+print("AUC score in train cohort: %.3f" % roc_auc_score(y_train, gbm_0))
+gbm_1 = gbm.predict_proba(x_test)[:, 1]
+gbm_1_pred = gbm.predict(x_test)
+print("AUC score in internal cohort: %.3f" % roc_auc_score(y_test, gbm_1))
+
+auc_train = pd.DataFrame({
+    "True_label":y_train,
+    "LR_Pred":lr_0,
+    "LR_Pred_label":lr_0_pred,
+    "LR_hybrid_Pred":s_lr_0,
+    "LR_hybrid_Pred_label":s_lr_0_pred,
+    "SVM_Pred":svm_0,
+    "SVM_Pred_label":svm_0_pred,
+    "SVM_hybrid_Pred":s_svm_0,
+    "SVM_hybrid_Pred_label":s_svm_0_pred,
+    "RF_Pred":rf_0,
+    "RF_Pred_label":rf_0_pred,
+    "RF_hybrid_Pred":s_rf_0,
+    "RF_hybrid_Pred_label":s_rf_0_pred,
+    "GBM_Pred":gbm_0,
+    "GBM_Pred_label":gbm_0_pred,
+    "GBM_hybrid_Pred":s_gbm_0,
+    "GBM_hybrid_Pred_label":s_gbm_0_pred,
+})
+
+auc_test = pd.DataFrame({
+    "True_label":y_test,
+    "LR_Pred":lr_1,
+    "LR_Pred_label":lr_1_pred,
+    "LR_hybrid_Pred":s_lr_1,
+    "LR_hybrid_Pred_label":s_lr_1_pred,
+    "SVM_Pred":svm_1,
+    "SVM_Pred_label":svm_1_pred,
+    "SVM_hybrid_Pred":s_svm_1,
+    "SVM_hybrid_Pred_label":s_svm_1_pred,
+    "RF_Pred":rf_1,
+    "RF_Pred_label":rf_1_pred,
+    "RF_hybrid_Pred":s_rf_1,
+    "RF_hybrid_Pred_label":s_rf_1_pred,
+    "GBM_Pred":gbm_1,
+    "GBM_Pred_label":gbm_1_pred,
+    "GBM_hybrid_Pred":s_gbm_1,
+    "GBM_hybrid_Pred_label":s_gbm_1_pred,
+})
+
+auc_train.to_csv('train_auc.csv',index=False)
+auc_test.to_csv('test_auc.csv',index=False)
+
+
+
+
