@@ -22,25 +22,21 @@ df$upper <- as.numeric(df$upper)
 
 colnames(df)[8]<-'                          '
 
-tm <- forest_theme(base_size = 14, # ??????С
+tm <- forest_theme(base_size = 14, 
                    core=list(bg_params=list(fill = c("white", "white", "white"))),
-                   # ??????????????״?????͡???ɫ??????
                    ci_pch = 20,
                    ci_col = "#4575b4", # #762a83
                    ci_lty = 1,
                    ci_lwd = 4,
-                   ci_Theight = 0, # ????????��?˼Ӷ?????
+                   ci_Theight = 0, 
                    
-                   # ?ο??߿??ȡ???״????ɫ
                    refline_lwd = 1,
                    refline_lty = "dashed",
                    refline_col = "grey20",
                    
-                   # ???????ε?????ɫ?ͱ߿?ɫ
                    summary_fill = "#4575b4",
                    summary_col = "#4575b4",
                    
-                   # ??ע??С?????塢??ɫ
                    footnote_cex = 0.6,
                    footnote_fontface = "italic",
                    footnote_col = "blue")
