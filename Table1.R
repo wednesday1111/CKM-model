@@ -4,7 +4,7 @@ setwd('/Volumes/T7/CKM')
 library(tableone)
 
 #full data##########
-data <- read.csv("full_data20250220.csv")
+data <- read.csv("full_data.csv")
 colnames(data)
 data<-data[data$CKM!='stage 0',]
 data$Zinc<-ifelse(data$mortstat==1,data$Zinc-1,data$Zinc)
@@ -50,7 +50,7 @@ tab_train <- print(tab_train,  formatOptions = list(big.mark = ","),
 write.csv(tab_train, file="output/table1.csv")
 
 #train data##########
-data <- read.csv("train20250224_nosmote.csv")
+data <- read.csv("train.csv")
 colnames(data)
 data<-data[data$CKM!='stage 0',]
 data<-data[!duplicated(data[c('SEQN')]), ]
@@ -97,7 +97,7 @@ tab_train <- print(tab_train,  formatOptions = list(big.mark = ","),
 write.csv(tab_train, file="output/table1_train.csv")
 
 #test data##########
-data <- read.csv("test20250224_nosmote.csv")
+data <- read.csv("test.csv")
 colnames(data)
 data<-data[data$CKM!='stage 0',]
 data<-data[!duplicated(data[c('SEQN')]), ]
